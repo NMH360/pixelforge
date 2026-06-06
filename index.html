@@ -313,12 +313,12 @@
   let levelGrid=null, coloredSegs=null, laneColors={}, paintColor="#ff5c5c";
   const LANE_COLORS=["#ff5c5c","#ffb347","#ffe14d","#7ee787","#5ad1b0","#62d0ff","#4d9bff","#a370ff","#ff6b9d","#ffffff"];
 
-  // ---------- math helpers ----------
+  
   const norm360=a=>((a%360)+360)%360;
   const ivWidth=iv=>{let s=0;for(const [a,b] of iv)s+=b-a+1;return s;};
   function dist(p,q){return Math.hypot(p.x-q.x,p.y-q.y);}
 
-  // ---------- shape-to-shape morph ----------
+  // shape-to-shape morph 
   let morph=null;
   const lerp=(a,b,u)=>a+(b-a)*u;
   const easeIO=u=>u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
@@ -416,7 +416,7 @@
   }
   function isSolidDisk(){ return P.solid || P.t*2>=P.w || P.t*2>=P.h; }
 
-  // ---------- parametric morph: ellipse / arc are one family ----------
+  //  parametric morph: ellipse / arc are one family
   // (superellipse ring with exponent n, thickness te, angular sweep from `start`)
   const BIGR=()=>Math.max(P.w,P.h);
   function paramsFor(mode){
@@ -451,7 +451,7 @@
     return null;
   }
 
-  // ---------- universal SDF morph: blend signed-distance fields of any two shapes ----------
+  // universal SDF morph: blend signed-distance fields of any two shapes 
   const SDF_CAP=1200000; // above this many cells, fall back to wipe for responsiveness
   function buildMask(rowsArr){
     const w=P.w,h=P.h,m=new Uint8Array(w*h);
@@ -501,7 +501,7 @@
     return shapeRows;
   }
 
-  // ---------- path morph: unfurl a shape's centerline into the curve ----------
+  
   const seSign=(c,e)=>Math.sign(c)*Math.pow(Math.abs(c),2/e);
   function pathFromParams(pr){
     const A=P.w/2,B=P.h/2, Ac=Math.max(1,A-pr.te/2), Bc=Math.max(1,B-pr.te/2);
@@ -550,7 +550,7 @@
     requestAnimationFrame(morphStep);
   }
 
-  // ---------- regular polygon (radial, blended toward a circle for rounding) ----------
+  // regular polygon (radial, blended toward a circle for rounding) 
   // Returns per-row {lo,hi} float x-bounds for a rounded N-gon scaled to semi-extents (Ax,By),
   // centered in the grid. c in [0,1]: 0 = sharp polygon, 1 = circle. Convex → one span per row.
   function polyBounds(N,c,Ax,By){
@@ -570,7 +570,7 @@
     return {lo,hi};
   }
 
-  // ---------- lane coloring: band the thickness by depth from the outer edge ----------
+  //  lane coloring.. band the thickness by depth from the outer edge
   function solidOuterRows(){
     const h=P.h, rows=new Array(h).fill(null), A=P.w/2,B=P.h/2;
     if(P.mode==="polygon"){
@@ -581,7 +581,7 @@
     }
     return rows;
   }
-  // exact Euclidean distance transform (Felzenszwalb) → distance to nearest background pixel
+  // exact euclidean distance transform 
   function edt1d(f,n,d,v,z){
     let k=0; v[0]=0; z[0]=-1e20; z[1]=1e20;
     for(let q=1;q<n;q++){
@@ -638,7 +638,7 @@
     }
   }
 
-  // ---------- build the pixel set ----------
+
   function buildShape(){
     const h=P.h, rows=new Array(h).fill(null);
     let count=0;
@@ -716,7 +716,7 @@
     shapeRows=rows; filledCount=count; buildLevels(rows); rebuildColored(); updateStats();
   }
 
-  // ---------- rendering ----------
+  // rendering 
   function draw(){
     const W=cv.width, H=cv.height, s=view.scale, ox=view.ox, oy=view.oy;
     ctx.fillStyle="#080a10"; ctx.fillRect(0,0,W,H);
@@ -835,7 +835,7 @@
     ctx.restore();
   }
 
-  // ---------- straight-run length labels (block-laying guide) ----------
+
   // intervals in A that are NOT covered by B (both sorted, non-overlapping, inclusive)
   function subtract(A,B){
     const res=[]; let bi=0;
@@ -910,7 +910,7 @@
     }
   }
 
-  // ---------- stats / hud ----------
+  // stats/hud
   const fmt=n=>n.toLocaleString("en-US");
   function updateStats(){
     let shape,mode,mc="v";
@@ -935,7 +935,7 @@
   }
   function updateHud(){ $("hZoom").textContent=view.scale>=1?view.scale.toFixed(1)+"×":view.scale.toFixed(2)+"×"; }
 
-  // ---------- view ----------
+  // view
   function resize(){
     DPR=Math.max(1,window.devicePixelRatio||1);
     const r=cv.getBoundingClientRect();
@@ -976,11 +976,11 @@
   }
   function cancelZoom(){ zAnim=null; }
 
-  // ---------- scheduled rebuild ----------
+  // scheduled rebuild
   let pending=false;
   function scheduleBuild(){ morph=null; if(pending)return; pending=true; requestAnimationFrame(()=>{pending=false;buildShape();draw();}); }
 
-  // ---------- inputs ----------
+  // inputs
   const clampInt=(v,lo,hi)=>{v=Math.round(+v||0);return Math.max(lo,Math.min(hi,v));};
   function clampHandles(){
     for(const k of ["p0","p1","p2"]){
@@ -1104,7 +1104,7 @@
   $("zin").onclick=()=>smoothZoom(cv.width/2,cv.height/2,1.4);
   $("zout").onclick=()=>smoothZoom(cv.width/2,cv.height/2,1/1.4);
 
-  // ---------- pointer ----------
+  // pointer
   let dragging=false,lx=0,ly=0,downX=0,downY=0,moved=false;
   const evPos=e=>{const r=cv.getBoundingClientRect();return{px:(e.clientX-r.left)*DPR,py:(e.clientY-r.top)*DPR};};
   function hitHandle(px,py){
@@ -1139,7 +1139,7 @@
   cv.addEventListener("pointerleave",()=>{$("hCur").textContent="—";});
   cv.addEventListener("wheel",e=>{e.preventDefault();const {px,py}=evPos(e);smoothZoom(px,py,e.deltaY<0?1.2:1/1.2);},{passive:false});
 
-  // ---------- export ----------
+  // export
   function exportPNG(){
     const off=document.createElement("canvas");off.width=P.w;off.height=P.h;
     const o=off.getContext("2d");o.fillStyle="#000";o.fillRect(0,0,P.w,P.h);
