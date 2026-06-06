@@ -350,7 +350,7 @@
       }
       return o.length?mergeIv(o):null;
     }
-    // span counts differ → morph the outer envelope
+    // span counts differ -> morph the outer envelope
     let amin=1/0,amax=-1/0,bmin=1/0,bmax=-1/0;
     for(const [a,b] of IA){if(a<amin)amin=a;if(b>amax)amax=b;}
     for(const [a,b] of IB){if(a<bmin)bmin=a;if(b>bmax)bmax=b;}
@@ -405,7 +405,7 @@
   }
   function arcSweep(){
     let s=norm360(P.a1-P.a0);
-    if(s===0 && P.a1!==P.a0) s=360;     // 0→360 means full
+    if(s===0 && P.a1!==P.a0) s=360;     // 0->360 means full
     return s;
   }
   function inSweep(ang,start,sweep){
@@ -552,7 +552,7 @@
 
   // regular polygon (radial, blended toward a circle for rounding) 
   // Returns per-row {lo,hi} float x-bounds for a rounded N-gon scaled to semi-extents (Ax,By),
-  // centered in the grid. c in [0,1]: 0 = sharp polygon, 1 = circle. Convex → one span per row.
+  // centered in the grid. c in [0,1]: 0 = sharp polygon, 1 = circle. Convex -> one span per row.
   function polyBounds(N,c,Ax,By){
     const A=P.w/2, B=P.h/2;
     const rot=(N&1)?Math.PI/2:Math.PI/2+Math.PI/N;   // odd: point up · even: flat top/bottom
@@ -666,7 +666,7 @@
           if(iMax>=iMin){ rows[j]=[[iMin,iMax]]; count+=iMax-iMin+1; }
         }
       } else {
-        // outline: stroke the centerline with a round brush → uniform thickness, clean joins
+        // outline: stroke the centerline with a round brush -> uniform thickness, clean joins
         const Ac=A-off, Bc=B-off;
         const M=clampInt(Math.round(3.2*(P.w+P.h)),256,16000), pts=new Array(M);
         for(let k=0;k<M;k++){const th=2*Math.PI*k/M, rr=pr(th); pts[k]={x:A+Ac*rr*Math.cos(th), y:B-Bc*rr*Math.sin(th)};}
@@ -859,7 +859,7 @@
     const eJ0=Math.max(0,jSv-vh), eJ1=Math.min(P.h,jEv+vh);
     const out=[], openL=new Map(), openR=new Map();
     const close=(x,sj,ej)=>{
-      if((sj===eJ0&&eJ0>0)||(ej===eJ1-1&&eJ1<P.h))return; // run leaves band → too long for view
+      if((sj===eJ0&&eJ0>0)||(ej===eJ1-1&&eJ1<P.h))return; // run leaves band -> too long for view
       out.push({x,j0:sj,j1:ej});
     };
     for(let j=eJ0;j<eJ1;j++){
@@ -886,7 +886,7 @@
       ctx.strokeStyle="rgba(8,10,16,.92)";ctx.strokeText(t,cx,cy);
       ctx.fillStyle="#c9a3ff";ctx.fillText(t,cx,cy);
     };
-    // vertical risers → label height
+    // vertical risers -> label height
     const seen=new Set();
     for(const r of verticalRisers(jSv,jEv)){
       const len=r.j1-r.j0+1;
@@ -894,7 +894,7 @@
       const k=r.x+"|"+r.j0+"|"+r.j1; if(seen.has(k))continue; seen.add(k);
       num(ox+(r.x+0.5)*s, oy+((r.j0+r.j1+1)/2)*s, len);
     }
-    // horizontal treads → label width
+    // horizontal treads -> label width
     const j0=Math.max(0,jSv-1), j1=Math.min(P.h-1,jEv), tseen=new Set();
     for(let j=j0;j<=j1;j++){
       const cur=shapeRows[j]; if(!cur)continue;
@@ -1153,5 +1153,8 @@
   defaultHandles(); applyModeUI(); resize(); buildShape(); fitView();
 })();
 </script>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "250c14ed1c6d4151a2655dbf38fa55c5"}'></script>
+<!-- End Cloudflare Web Analytics -->
 </body>
 </html>
