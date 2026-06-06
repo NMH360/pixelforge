@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIXELFORGE — Pixelated Curve Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080a10;
+    --panel:#0e1119;
+    --panel-2:#141926;
+    --line:#222a3d;
+    --line-soft:#1a2030;
+    --ink:#cdd6ea;
+    --ink-dim:#6c7a96;
+    --ink-faint:#3e4761;
+    --acc:#4d9bff;       /* blue - filled pixels */
+    --acc-dim:#1f3a66;
+    --pur:#a370ff;       /* purple secondary */
+    --pur-dim:#3d2a66;
+    --amber:#ffb347;
+    --shadow:0 10px 40px rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:
+      radial-gradient(1200px 700px at 82% -10%, rgba(77,155,255,.07), transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, rgba(163,112,255,.07), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:13px;overflow:hidden;-webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex;height:100vh;width:100vw}
+
+  /* SIDEBAR */
+  .side{
+    width:340px;min-width:340px;height:100%;
+    background:linear-gradient(180deg,var(--panel),#0a0d14);
+    border-right:1px solid var(--line);display:flex;flex-direction:column;
+    box-shadow:var(--shadow);z-index:5;
+  }
+  .brand{padding:18px 20px 14px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+  .brand::after{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(var(--line-soft) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);
+    background-size:9px 9px;opacity:.4;pointer-events:none;
+    mask:linear-gradient(180deg,transparent,#000 80%);
+  }
+  .brand h1{
+    font-family:"Pixelify Sans",sans-serif;font-weight:700;font-size:26px;line-height:1;
+    margin:0;letter-spacing:.5px;color:var(--acc);text-shadow:0 0 18px rgba(77,155,255,.4);
+    position:relative;z-index:1;
+  }
+  .brand h1 b{color:var(--pur);text-shadow:0 0 18px rgba(163,112,255,.4)}
+  .brand .by{position:absolute;top:14px;right:16px;z-index:2;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-dim)}
+  .brand .by::before{content:"";display:inline-block;width:5px;height:5px;border-radius:1px;background:var(--pur);box-shadow:0 0 6px var(--pur);margin-right:6px;vertical-align:middle}
+  .brand p{margin:6px 0 0;color:var(--ink-dim);font-size:11px;letter-spacing:.4px;position:relative;z-index:1}
+
+  .controls{padding:14px 20px 20px;overflow-y:auto;flex:1}
+  .controls::-webkit-scrollbar{width:8px}
+  .controls::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+
+  /* segmented shape picker */
+  .seg{display:flex;gap:4px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:4px}
+  .seg button{
+    flex:1;background:transparent;border:none;color:var(--ink-dim);font-family:inherit;
+    font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:9px 4px;border-radius:6px;
+    cursor:pointer;transition:.15s;
+  }
+  .seg button:hover{color:var(--ink)}
+  .seg button.on{background:linear-gradient(180deg,rgba(77,155,255,.18),rgba(77,155,255,.06));color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc-dim)}
+
+  .field{margin-top:18px}
+  .field .lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .field .lab span{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-dim)}
+  .field .lab .val{display:flex;align-items:center;gap:6px}
+  .numbox{
+    width:80px;background:var(--panel-2);border:1px solid var(--line);color:var(--acc);
+    font-family:inherit;font-size:13px;font-weight:600;text-align:right;padding:4px 7px;border-radius:5px;outline:none;
+  }
+  .numbox:focus{border-color:var(--acc-dim);box-shadow:0 0 0 2px rgba(77,155,255,.14)}
+  .field .lab .unit{color:var(--ink-faint);font-size:11px}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;
+    background:linear-gradient(90deg,var(--acc-dim),var(--line));border-radius:6px;outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:4px;
+    background:var(--acc);border:2px solid #080a10;cursor:grab;box-shadow:0 0 12px rgba(77,155,255,.55);
+  }
+  input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.05)}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;background:var(--acc);border:2px solid #080a10;cursor:grab;box-shadow:0 0 12px rgba(77,155,255,.55)}
+  .field.pur input[type=range]{background:linear-gradient(90deg,var(--pur-dim),var(--line))}
+  .field.pur input[type=range]::-webkit-slider-thumb{background:var(--pur);box-shadow:0 0 12px rgba(163,112,255,.55)}
+  .field.pur input[type=range]::-moz-range-thumb{background:var(--pur);box-shadow:0 0 12px rgba(163,112,255,.55)}
+  .field.pur .numbox{color:var(--pur)}
+  .field.pur .numbox:focus{border-color:var(--pur-dim);box-shadow:0 0 0 2px rgba(163,112,255,.14)}
+
+  .toggles{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+  .tog{
+    flex:1;min-width:80px;display:flex;align-items:center;gap:7px;justify-content:center;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:9px 6px;
+    cursor:pointer;user-select:none;font-size:11px;letter-spacing:.6px;color:var(--ink-dim);transition:.15s;
+  }
+  .tog:hover{border-color:var(--ink-faint);color:var(--ink)}
+  .tog.on{border-color:var(--acc-dim);color:var(--acc);background:rgba(77,155,255,.06)}
+  .tog .dot{width:9px;height:9px;border-radius:2px;background:var(--ink-faint);transition:.15s}
+  .tog.on .dot{background:var(--acc);box-shadow:0 0 8px var(--acc)}
+  .tog.hide{display:none}
+
+  .note{margin-top:16px;font-size:11px;line-height:1.55;color:var(--ink-dim);background:var(--panel-2);border:1px solid var(--line);border-left:2px solid var(--pur);border-radius:6px;padding:10px 12px}
+  .note b{color:var(--pur)}
+  .hidden{display:none}
+  .swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+  .sw{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid #0a0d14;box-shadow:0 0 0 1px var(--line)}
+  .sw.on{border-color:#fff;box-shadow:0 0 0 1px #fff}
+  #customColor{width:26px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer}
+  .clearbtn{margin-top:8px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-dim);font-family:inherit;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:6px 10px;border-radius:5px;cursor:pointer}
+  .clearbtn:hover{border-color:var(--pur-dim);color:var(--pur)}
+
+  .divider{height:1px;background:var(--line);margin:22px 0 0}
+  .stats{margin-top:18px}
+  .stats h2{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-faint);margin:0 0 10px}
+  .stat{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line-soft)}
+  .stat .k{color:var(--ink-dim);font-size:11px;letter-spacing:.3px}
+  .stat .v{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .stat .v.big{color:var(--acc);font-size:15px}
+  .stat .v.warn{color:var(--amber)}
+
+  .foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+  .footrow{display:flex;gap:8px}
+  .support{width:100%;background:linear-gradient(180deg,rgba(163,112,255,.22),rgba(163,112,255,.10));border:1px solid var(--pur-dim);color:#c9a3ff;font-family:inherit;font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:10px 6px;border-radius:6px;cursor:pointer;transition:.15s}
+  .support:hover{border-color:var(--pur);box-shadow:0 0 14px rgba(163,112,255,.28);color:#fff}
+  .support .hrt{color:#ff6b9d;margin-right:6px}
+  .btn{
+    flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);font-family:inherit;
+    font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:9px 6px;border-radius:6px;cursor:pointer;transition:.15s;
+  }
+  .btn:hover{border-color:var(--acc-dim);color:var(--acc)}
+  .btn.pur:hover{border-color:var(--pur-dim);color:var(--pur)}
+
+  /* STAGE */
+  .stage{flex:1;position:relative;overflow:hidden;background:var(--bg)}
+  #c{display:block;width:100%;height:100%;cursor:grab}
+  #c.drag{cursor:grabbing}
+  #c.handle{cursor:crosshair}
+  .hud{
+    position:absolute;left:16px;bottom:16px;z-index:4;background:rgba(10,14,22,.82);
+    border:1px solid var(--line);border-radius:8px;padding:9px 13px;backdrop-filter:blur(6px);
+    font-size:11px;color:var(--ink-dim);display:flex;gap:16px;align-items:center;font-variant-numeric:tabular-nums;
+  }
+  .hud b{color:var(--acc);font-weight:600}
+  .hint{
+    position:absolute;right:16px;top:16px;z-index:4;background:rgba(10,14,22,.7);
+    border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:10.5px;color:var(--ink-faint);
+    letter-spacing:.4px;backdrop-filter:blur(6px);max-width:240px;text-align:right;
+  }
+  .zoomctl{position:absolute;right:16px;bottom:16px;z-index:4;display:flex;flex-direction:column;gap:6px}
+  .zoomctl button{
+    width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:rgba(10,14,22,.82);
+    color:var(--ink);font-size:18px;cursor:pointer;backdrop-filter:blur(6px);transition:.15s;font-family:inherit;
+  }
+  .zoomctl button:hover{border-color:var(--acc-dim);color:var(--acc)}
+
+  @media (max-width:760px){
+    .app{flex-direction:column}
+    .side{width:100%;min-width:0;height:auto;max-height:54vh;border-right:none;border-bottom:1px solid var(--line)}
+    .stage{flex:1}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <span class="by">By NMH360</span>
+      <h1>PIXEL<b>FORGE</b></h1>
+      <p>pixelated shape calculator</p>
+    </div>
+
+    <div class="controls">
+      <div class="seg" id="seg">
+        <button data-mode="ellipse" class="on">Ellipse</button>
+        <button data-mode="polygon">Polygon</button>
+        <button data-mode="arc">Arc</button>
+        <button data-mode="curve">Curve</button>
+      </div>
+
+      <div class="field">
+        <div class="lab"><span>Width</span><div class="val"><input class="numbox" id="wNum" type="number" min="1" max="100000" value="64"><span class="unit">px</span></div></div>
+        <input type="range" id="wRange" min="1" max="2000" value="64">
+      </div>
+      <div class="field">
+        <div class="lab"><span>Height</span><div class="val"><input class="numbox" id="hNum" type="number" min="1" max="100000" value="64"><span class="unit">px</span></div></div>
+        <input type="range" id="hRange" min="1" max="2000" value="64">
+      </div>
+      <div class="field pur">
+        <div class="lab"><span id="tLab">Thickness</span><div class="val"><input class="numbox" id="tNum" type="number" min="1" max="50000" value="2"><span class="unit">px</span></div></div>
+        <input type="range" id="tRange" min="1" max="500" value="2">
+      </div>
+
+      <!-- polygon-only -->
+      <div id="polyCtrls" class="hidden">
+        <div class="field pur">
+          <div class="lab"><span>Sides</span><div class="val"><input class="numbox" id="sidesNum" type="number" min="3" max="12" value="6"></div></div>
+          <input type="range" id="sidesRange" min="3" max="12" value="6">
+        </div>
+        <div class="field pur">
+          <div class="lab"><span>Corner curve</span><div class="val"><input class="numbox" id="curvNum" type="number" min="0" max="100" value="0"><span class="unit">%</span></div></div>
+          <input type="range" id="curvRange" min="0" max="100" value="0">
+        </div>
+      </div>
+
+      <!-- arc-only -->
+      <div id="arcCtrls" class="hidden">
+        <div class="field">
+          <div class="lab"><span>Start angle</span><div class="val"><input class="numbox" id="a0Num" type="number" min="0" max="360" value="0"><span class="unit">°</span></div></div>
+          <input type="range" id="a0Range" min="0" max="360" value="0">
+        </div>
+        <div class="field">
+          <div class="lab"><span>End angle</span><div class="val"><input class="numbox" id="a1Num" type="number" min="0" max="360" value="180"><span class="unit">°</span></div></div>
+          <input type="range" id="a1Range" min="0" max="360" value="180">
+        </div>
+      </div>
+
+      <!-- curve-only -->
+      <div id="curveCtrls" class="hidden">
+        <div class="note"><b>Drag the handles</b> on the grid: <b>A</b> &amp; <b>B</b> are the two ends, <b>C</b> bends the curve.</div>
+      </div>
+
+      <!-- lanes (ring shapes): click-to-paint -->
+      <div id="laneCtrls" class="hidden">
+        <div class="field">
+          <div class="lab"><span>Lane paint</span><input type="color" id="customColor" value="#ff5c5c"></div>
+          <div class="swatches" id="swatches"></div>
+          <div class="note">Pick a color, then click the shape — that ring fills all the way around. Paint neighbouring rings the same color for wider lanes.<br><button class="clearbtn" id="clearLanes">Clear paint</button></div>
+        </div>
+      </div>
+
+      <div class="toggles">
+        <div class="tog" id="lockTog"><span class="dot"></span>LOCK 1:1</div>
+        <div class="tog on" id="gridTog"><span class="dot"></span>GRID</div>
+        <div class="tog" id="solidTog"><span class="dot"></span>SOLID</div>
+        <div class="tog on" id="lenTog"><span class="dot"></span>LENGTHS</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="stats">
+        <h2>// calculation</h2>
+        <div class="stat"><span class="k">Shape</span><span class="v" id="sShape">Circle</span></div>
+        <div class="stat"><span class="k">Grid bounds</span><span class="v" id="sBounds">64 × 64</span></div>
+        <div class="stat"><span class="k">Total cells</span><span class="v" id="sTotal">4,096</span></div>
+        <div class="stat"><span class="k">Filled pixels</span><span class="v big" id="sFilled">—</span></div>
+        <div class="stat"><span class="k">Coverage</span><span class="v" id="sCover">—</span></div>
+        <div class="stat"><span class="k">Render mode</span><span class="v" id="sMode">outline</span></div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="footrow">
+        <button class="btn" id="fitBtn">Fit view</button>
+        <button class="btn" id="resetBtn">Reset</button>
+        <button class="btn pur" id="pngBtn">Save PNG</button>
+      </div>
+      <button class="support" id="supportBtn"><span class="hrt">&#9749;</span>Support on Ko-fi</button>
+    </div>
+  </aside>
+
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="hint" id="hint">scroll = zoom · drag = pan</div>
+    <div class="hud">
+      <div>zoom <b id="hZoom">—</b></div>
+      <div>cursor <b id="hCur">—</b></div>
+    </div>
+    <div class="zoomctl">
+      <button id="zin">+</button>
+      <button id="zout">−</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+  "use strict";
+  const $=id=>document.getElementById(id);
+  const cv=$("c"), ctx=cv.getContext("2d",{alpha:false});
+
+  const P={
+    mode:"ellipse", w:64, h:64, t:2, lock:false, grid:true, solid:false, lengths:true,
+    sides:6, curv:0, a0:0, a1:180,
+    curve:{ p0:{x:8,y:50}, p1:{x:32,y:6}, p2:{x:56,y:50} },
+    curveInit:false
+  };
+  const view={ scale:8, ox:0, oy:0 };
+  let DPR=Math.max(1,window.devicePixelRatio||1);
+  let shapeRows=[];          // rows[j] = array of [a,b] inclusive intervals, or null
+  let filledCount=0;
+  let activeHandle=null;
+  let zAnim=null;
+  let levelGrid=null, coloredSegs=null, laneColors={}, paintColor="#ff5c5c";
+  const LANE_COLORS=["#ff5c5c","#ffb347","#ffe14d","#7ee787","#5ad1b0","#62d0ff","#4d9bff","#a370ff","#ff6b9d","#ffffff"];
+
+  // ---------- math helpers ----------
+  const norm360=a=>((a%360)+360)%360;
+  const ivWidth=iv=>{let s=0;for(const [a,b] of iv)s+=b-a+1;return s;};
+  function dist(p,q){return Math.hypot(p.x-q.x,p.y-q.y);}
+
+  // ---------- shape-to-shape morph ----------
+  let morph=null;
+  const lerp=(a,b,u)=>a+(b-a)*u;
+  const easeIO=u=>u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+  function mergeIv(iv){
+    iv.sort((p,q)=>p[0]-q[0]);
+    const out=[];let ca=iv[0][0],cb=iv[0][1];
+    for(let k=1;k<iv.length;k++){const a=iv[k][0],b=iv[k][1];if(a<=cb+1){if(b>cb)cb=b;}else{out.push([ca,cb]);ca=a;cb=b;}}
+    out.push([ca,cb]);return out;
+  }
+  // interpolate one row's intervals from A toward B at progress u
+  function morphRow(IA,IB,u){
+    IA=IA||[];IB=IB||[];
+    if(!IA.length&&!IB.length)return null;
+    const grow=(arr,toPoint)=>{
+      const o=[];
+      for(const [a,b] of arr){const m=(a+b)/2;
+        const ra=Math.round(toPoint?lerp(a,m,u):lerp(m,a,u));
+        const rb=Math.round(toPoint?lerp(b,m,u):lerp(m,b,u));
+        if(rb>=ra)o.push([ra,rb]);}
+      return o.length?mergeIv(o):null;
+    };
+    if(!IB.length)return grow(IA,true);     // A shrinks away
+    if(!IA.length)return grow(IB,false);    // B grows in
+    if(IA.length===IB.length){              // matched spans: lerp endpoints
+      const o=[];
+      for(let k=0;k<IA.length;k++){
+        const ra=Math.round(lerp(IA[k][0],IB[k][0],u)), rb=Math.round(lerp(IA[k][1],IB[k][1],u));
+        if(rb>=ra)o.push([ra,rb]);
+      }
+      return o.length?mergeIv(o):null;
+    }
+    // span counts differ → morph the outer envelope
+    let amin=1/0,amax=-1/0,bmin=1/0,bmax=-1/0;
+    for(const [a,b] of IA){if(a<amin)amin=a;if(b>amax)amax=b;}
+    for(const [a,b] of IB){if(a<bmin)bmin=a;if(b>bmax)bmax=b;}
+    const ra=Math.round(lerp(amin,bmin,u)), rb=Math.round(lerp(amax,bmax,u));
+    return rb>=ra?[[ra,rb]]:null;
+  }
+  function startMorph(rowsA,kind){ morph={rowsA,kind,start:performance.now(),dur:240}; requestAnimationFrame(morphStep); }
+  function startMorphParam(pa,pb){ morph={kind:"param",pa,pb,start:performance.now(),dur:240}; requestAnimationFrame(morphStep); }
+  function morphStep(){
+    if(!morph)return;
+    const done=(performance.now()-morph.start)>=morph.dur;
+    draw();
+    if(done){morph=null;draw();} else requestAnimationFrame(morphStep);
+  }
+  function snapshotMorph(){
+    const u=easeIO(Math.min(1,(performance.now()-morph.start)/morph.dur));
+    const a=morph.rowsA, b=shapeRows, out=new Array(P.h);
+    for(let j=0;j<P.h;j++) out[j]=morphRow(a[j],b[j],u);
+    return out;
+  }
+
+  function superRow(j,t,n){
+    const A=P.w/2,B=P.h/2;
+    const dy=(j+0.5)-B;
+    const ky=Math.abs(dy/B), ins=1-Math.pow(ky,n); if(ins<0)return null;
+    const half=A*Math.pow(ins,1/n);
+    const iMin=Math.ceil((A-half)-0.5), iMax=Math.floor((A+half)-0.5);
+    if(iMax<iMin)return null;
+    let hole=null;
+    const Ai=A-t,Bi=B-t;
+    if(Ai>0&&Bi>0){
+      const kyi=Math.abs(dy/Bi), insi=1-Math.pow(kyi,n);
+      if(insi>0){
+        const halfi=Ai*Math.pow(insi,1/n);
+        let a=Math.ceil((A-halfi)-0.5), b=Math.floor((A+halfi)-0.5);
+        a=Math.max(a,iMin); b=Math.min(b,iMax);
+        if(b>=a)hole=[a,b];
+      }
+    }
+    return {iMin,iMax,hole};
+  }
+  function ringPieces(r){
+    if(!r.hole)return [[r.iMin,r.iMax]];
+    const out=[];
+    if(r.hole[0]>r.iMin)out.push([r.iMin,r.hole[0]-1]);
+    if(r.hole[1]<r.iMax)out.push([r.hole[1]+1,r.iMax]);
+    return out;
+  }
+  function cellAngle(i,j,A,B){
+    const a=Math.atan2(-((j+0.5)-B),((i+0.5)-A))*180/Math.PI;
+    return norm360(a);
+  }
+  function arcSweep(){
+    let s=norm360(P.a1-P.a0);
+    if(s===0 && P.a1!==P.a0) s=360;     // 0→360 means full
+    return s;
+  }
+  function inSweep(ang,start,sweep){
+    if(sweep<=0)return false;
+    if(sweep>=360)return true;
+    const d=norm360(ang-start);
+    return d<=sweep+1e-9;
+  }
+  function isSolidDisk(){ return P.solid || P.t*2>=P.w || P.t*2>=P.h; }
+
+  // ---------- parametric morph: ellipse / arc are one family ----------
+  // (superellipse ring with exponent n, thickness te, angular sweep from `start`)
+  const BIGR=()=>Math.max(P.w,P.h);
+  function paramsFor(mode){
+    return {
+      n:     2,
+      te:    mode==="arc" ? P.t : (P.solid ? BIGR() : P.t),
+      sweep: mode==="arc" ? arcSweep() : 360,
+      start: norm360(P.a0)
+    };
+  }
+  const lerpParams=(a,b,u)=>({n:lerp(a.n,b.n,u),te:lerp(a.te,b.te,u),sweep:lerp(a.sweep,b.sweep,u),start:a.start});
+  function paramRow(j,pr){
+    const r=superRow(j,pr.te,pr.n); if(!r)return null;
+    if(pr.sweep>=359.999) return ringPieces(r);
+    const A=P.w/2,B=P.h/2, kept=[];
+    for(const [pa,pb] of ringPieces(r)){
+      let run=null;
+      for(let i=pa;i<=pb;i++){
+        if(inSweep(cellAngle(i,j,A,B),pr.start,pr.sweep)){if(run===null)run=i;}
+        else if(run!==null){kept.push([run,i-1]);run=null;}
+      }
+      if(run!==null)kept.push([run,pb]);
+    }
+    return kept.length?kept:null;
+  }
+  function buildFullParamRows(pr){const o=new Array(P.h);for(let j=0;j<P.h;j++)o[j]=paramRow(j,pr);return o;}
+  function curParams(){
+    if(morph&&morph.kind==="param"){
+      const eu=easeIO(Math.min(1,(performance.now()-morph.start)/morph.dur));
+      return lerpParams(morph.pa,morph.pb,eu);
+    }
+    return null;
+  }
+
+  // ---------- universal SDF morph: blend signed-distance fields of any two shapes ----------
+  const SDF_CAP=1200000; // above this many cells, fall back to wipe for responsiveness
+  function buildMask(rowsArr){
+    const w=P.w,h=P.h,m=new Uint8Array(w*h);
+    for(let j=0;j<h;j++){const iv=rowsArr&&rowsArr[j]; if(!iv)continue; const base=j*w; for(const [a,b] of iv){for(let i=a;i<=b;i++)m[base+i]=1;}}
+    return m;
+  }
+  function distTransform(mask,sourceVal){
+    const w=P.w,h=P.h,INF=1e9,d=new Float32Array(w*h),C1=1,C2=Math.SQRT2;
+    for(let k=0;k<w*h;k++) d[k]=(mask[k]===sourceVal)?0:INF;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const k=y*w+x;let v=d[k];
+      if(x>0)v=Math.min(v,d[k-1]+C1);
+      if(y>0)v=Math.min(v,d[k-w]+C1);
+      if(x>0&&y>0)v=Math.min(v,d[k-w-1]+C2);
+      if(x<w-1&&y>0)v=Math.min(v,d[k-w+1]+C2);
+      d[k]=v;}
+    for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){const k=y*w+x;let v=d[k];
+      if(x<w-1)v=Math.min(v,d[k+1]+C1);
+      if(y<h-1)v=Math.min(v,d[k+w]+C1);
+      if(x<w-1&&y<h-1)v=Math.min(v,d[k+w+1]+C2);
+      if(x>0&&y<h-1)v=Math.min(v,d[k+w-1]+C2);
+      d[k]=v;}
+    return d;
+  }
+  function sdf(rowsArr){
+    const mask=buildMask(rowsArr), dOut=distTransform(mask,1), dIn=distTransform(mask,0);
+    const n=P.w*P.h, s=new Float32Array(n);
+    for(let k=0;k<n;k++) s[k]=dOut[k]-dIn[k];   // <0 inside, >0 outside
+    return s;
+  }
+  function startMorphSdf(rowsA){
+    morph={kind:"sdf",sdfA:sdf(rowsA),sdfB:sdf(shapeRows),start:performance.now(),dur:300};
+    requestAnimationFrame(morphStep);
+  }
+  // full-grid rasterization of whatever is currently on screen (for mid-morph handoff)
+  function currentDisplayedRows(){
+    if(!morph) return shapeRows;
+    if(morph.kind==="param") return buildFullParamRows(curParams());
+    if(morph.kind==="sdf"){
+      const eu=easeIO(Math.min(1,(performance.now()-morph.start)/morph.dur));
+      const w=P.w,h=P.h,a=morph.sdfA,b=morph.sdfB,out=new Array(h).fill(null);
+      for(let j=0;j<h;j++){const base=j*w;let iv=null,rs=-1;
+        for(let i=0;i<w;i++){const ins=((1-eu)*a[base+i]+eu*b[base+i])<=0;
+          if(ins){if(rs<0)rs=i;}else if(rs>=0){(iv||(iv=[])).push([rs,i-1]);rs=-1;}}
+        if(rs>=0)(iv||(iv=[])).push([rs,w-1]); out[j]=iv;}
+      return out;
+    }
+    return shapeRows;
+  }
+
+  // ---------- path morph: unfurl a shape's centerline into the curve ----------
+  const seSign=(c,e)=>Math.sign(c)*Math.pow(Math.abs(c),2/e);
+  function pathFromParams(pr){
+    const A=P.w/2,B=P.h/2, Ac=Math.max(1,A-pr.te/2), Bc=Math.max(1,B-pr.te/2);
+    const closed=pr.sweep>=359.999;
+    const N=clampInt(Math.round(1.8*(P.w+P.h)),120,3000), pts=[];
+    for(let k=0;k<N;k++){
+      const deg= closed ? 360*k/N : pr.start + pr.sweep*(k/(N-1));
+      const th=deg*Math.PI/180;
+      pts.push({x:A+Ac*seSign(Math.cos(th),pr.n), y:B-Bc*seSign(Math.sin(th),pr.n)});
+    }
+    return {pts,thick:Math.max(1,pr.te)};
+  }
+  function pathForCurve(){
+    const {p0,p1,p2}=P.curve, N=clampInt(Math.round(dist(p0,p1)+dist(p1,p2))+2,64,3000), pts=[];
+    for(let k=0;k<N;k++){const t=k/(N-1),mt=1-t;pts.push({x:mt*mt*p0.x+2*mt*t*p1.x+t*t*p2.x,y:mt*mt*p0.y+2*mt*t*p1.y+t*t*p2.y});}
+    return {pts,thick:Math.max(1,P.t)};
+  }
+  function resamplePts(pts,M){
+    const K=pts.length,out=new Array(M);
+    for(let i=0;i<M;i++){const f=i*(K-1)/(M-1),j=Math.floor(f),t=f-j,a=pts[j],b=pts[Math.min(K-1,j+1)];out[i]={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
+    return out;
+  }
+  function stampPolyline(pts,radius){
+    const rows=new Array(P.h).fill(null), map=new Map(), r=Math.max(0.5,radius);
+    for(let k=0;k<pts.length;k++){
+      const sx=pts[k].x, sy=pts[k].y;
+      const j0=Math.max(0,Math.floor(sy-r)), j1=Math.min(P.h-1,Math.ceil(sy+r));
+      for(let j=j0;j<=j1;j++){
+        const dyc=(j+0.5)-sy, hx2=r*r-dyc*dyc; if(hx2<0)continue;
+        const hx=Math.sqrt(hx2);
+        let a=Math.ceil((sx-hx)-0.5), b=Math.floor((sx+hx)-0.5);
+        a=Math.max(0,a); b=Math.min(P.w-1,b); if(b<a)continue;
+        let arr=map.get(j); if(!arr){arr=[];map.set(j,arr);} arr.push([a,b]);
+      }
+    }
+    for(const [j,arr] of map){
+      arr.sort((u,v)=>u[0]-v[0]); const m=[]; let ca=arr[0][0],cb=arr[0][1];
+      for(let i=1;i<arr.length;i++){const a=arr[i][0],b=arr[i][1];if(a<=cb+1){if(b>cb)cb=b;}else{m.push([ca,cb]);ca=a;cb=b;}}
+      m.push([ca,cb]); rows[j]=m;
+    }
+    return rows;
+  }
+  function startMorphPath(pa,pb){
+    const M=clampInt(Math.round(1.6*(P.w+P.h)),200,2600);
+    morph={kind:"path",ptsA:resamplePts(pa.pts,M),ptsB:resamplePts(pb.pts,M),thA:pa.thick,thB:pb.thick,start:performance.now(),dur:280};
+    requestAnimationFrame(morphStep);
+  }
+
+  // ---------- regular polygon (radial, blended toward a circle for rounding) ----------
+  // Returns per-row {lo,hi} float x-bounds for a rounded N-gon scaled to semi-extents (Ax,By),
+  // centered in the grid. c in [0,1]: 0 = sharp polygon, 1 = circle. Convex → one span per row.
+  function polyBounds(N,c,Ax,By){
+    const A=P.w/2, B=P.h/2;
+    const rot=(N&1)?Math.PI/2:Math.PI/2+Math.PI/N;   // odd: point up · even: flat top/bottom
+    const seg=2*Math.PI/N, cN=Math.cos(Math.PI/N);
+    const pr=th=>{const a=((th-rot)%seg+seg)%seg; const rp=cN/Math.cos(a-Math.PI/N); return rp+(1-rp)*c;};
+    const lo=new Array(P.h).fill(null), hi=new Array(P.h).fill(null);
+    const M=clampInt(Math.round(3.2*(P.w+P.h)),256,16000);
+    for(let k=0;k<M;k++){
+      const th=2*Math.PI*k/M, r=pr(th);
+      const x=A+Ax*r*Math.cos(th), y=B-By*r*Math.sin(th);
+      const j=Math.floor(y); if(j<0||j>=P.h)continue;
+      if(lo[j]===null||x<lo[j])lo[j]=x;
+      if(hi[j]===null||x>hi[j])hi[j]=x;
+    }
+    return {lo,hi};
+  }
+
+  // ---------- lane coloring: band the thickness by depth from the outer edge ----------
+  function solidOuterRows(){
+    const h=P.h, rows=new Array(h).fill(null), A=P.w/2,B=P.h/2;
+    if(P.mode==="polygon"){
+      const o=polyBounds(P.sides,P.curv,A,B);
+      for(let j=0;j<h;j++){if(o.lo[j]===null)continue;const iMin=Math.max(0,Math.ceil(o.lo[j]-0.5)),iMax=Math.min(P.w-1,Math.floor(o.hi[j]-0.5));if(iMax>=iMin)rows[j]=[[iMin,iMax]];}
+    } else {
+      for(let j=0;j<h;j++){const r=superRow(j,Math.max(P.w,P.h),2);if(!r)continue;const a=Math.max(0,r.iMin),b=Math.min(P.w-1,r.iMax);if(b>=a)rows[j]=[[a,b]];}
+    }
+    return rows;
+  }
+  // exact Euclidean distance transform (Felzenszwalb) → distance to nearest background pixel
+  function edt1d(f,n,d,v,z){
+    let k=0; v[0]=0; z[0]=-1e20; z[1]=1e20;
+    for(let q=1;q<n;q++){
+      let s=((f[q]+q*q)-(f[v[k]]+v[k]*v[k]))/(2*q-2*v[k]);
+      while(s<=z[k]){k--; s=((f[q]+q*q)-(f[v[k]]+v[k]*v[k]))/(2*q-2*v[k]);}
+      k++; v[k]=q; z[k]=s; z[k+1]=1e20;
+    }
+    k=0;
+    for(let q=0;q<n;q++){ while(z[k+1]<q)k++; const dx=q-v[k]; d[q]=dx*dx+f[v[k]]; }
+  }
+  function edt2d(mask){
+    const w=P.w,h=P.h,INF=(w+h)*(w+h), g=new Float64Array(w*h);
+    for(let k=0;k<w*h;k++) g[k]=mask[k]?INF:0;
+    const m=Math.max(w,h), f=new Float64Array(m), d=new Float64Array(m), v=new Int32Array(m), z=new Float64Array(m+1);
+    for(let x=0;x<w;x++){ for(let y=0;y<h;y++)f[y]=g[y*w+x]; edt1d(f,h,d,v,z); for(let y=0;y<h;y++)g[y*w+x]=d[y]; }
+    for(let y=0;y<h;y++){ const off=y*w; for(let x=0;x<w;x++)f[x]=g[off+x]; edt1d(f,w,d,v,z); for(let x=0;x<w;x++)g[off+x]=d[x]; }
+    const out=new Float32Array(w*h); for(let k=0;k<w*h;k++)out[k]=Math.sqrt(g[k]); return out;
+  }
+  // per-pixel concentric ring level (0 = outermost), for ring shapes only
+  function buildLevels(rows){
+    levelGrid=null;
+    if(!(P.mode==="ellipse"||P.mode==="arc"||P.mode==="polygon")) return;
+    const w=P.w,h=P.h,A=w/2,B=h/2, lg=new Int16Array(w*h).fill(-1);
+    if(P.mode==="polygon"){
+      // edge-distance: lanes run parallel to the straight edges
+      const depth=edt2d(buildMask(solidOuterRows()));
+      for(let j=0;j<h;j++){const iv=rows[j];if(!iv)continue;const base=j*w;for(const [a,b] of iv)for(let i=a;i<=b;i++)lg[base+i]=Math.max(0,Math.round(depth[base+i])-1);}
+    } else {
+      // analytic radial depth: smooth concentric rings (no pixelation flat-spots)
+      for(let j=0;j<h;j++){
+        const iv=rows[j]; if(!iv)continue; const base=j*w;
+        for(const [a,b] of iv)for(let i=a;i<=b;i++){
+          const dx=(i+0.5)-A, dy=(j+0.5)-B, r=Math.hypot(dx,dy);
+          let Rout;
+          if(r<1e-6) Rout=Math.min(A,B);
+          else { const ux=dx/r, uy=dy/r; Rout=1/Math.sqrt((ux/A)*(ux/A)+(uy/B)*(uy/B)); }
+          lg[base+i]=Math.max(0,Math.floor(Rout-r));
+        }
+      }
+    }
+    levelGrid=lg;
+  }
+  function colorAt(j,i){ if(levelGrid){const lv=levelGrid[j*P.w+i]; if(lv>=0&&laneColors[lv])return laneColors[lv];} return "#4d9bff"; }
+  function rebuildColored(){
+    const h=P.h; coloredSegs=new Array(h).fill(null);
+    for(let j=0;j<h;j++){
+      const iv=shapeRows[j]; if(!iv)continue; const segs=[];
+      for(const [a,b] of iv){
+        let st=a,col=colorAt(j,a);
+        for(let i=a+1;i<=b;i++){const cc=colorAt(j,i); if(cc!==col){segs.push([st,i-1,col]);st=i;col=cc;}}
+        segs.push([st,b,col]);
+      }
+      coloredSegs[j]=segs;
+    }
+  }
+
+  // ---------- build the pixel set ----------
+  function buildShape(){
+    const h=P.h, rows=new Array(h).fill(null);
+    let count=0;
+
+    if(P.mode==="ellipse"){
+      const t=P.solid?Math.max(P.w,P.h):P.t;
+      for(let j=0;j<h;j++){
+        const r=superRow(j,t,2); if(!r)continue;
+        const iv=ringPieces(r); rows[j]=iv; count+=ivWidth(iv);
+      }
+    } else if(P.mode==="polygon"){
+      const A=P.w/2,B=P.h/2, N=P.sides, c=P.curv;
+      const solid=P.solid||P.t*2>=P.w||P.t*2>=P.h;
+      const rot=(N&1)?Math.PI/2:Math.PI/2+Math.PI/N, seg=2*Math.PI/N, cN=Math.cos(Math.PI/N);
+      const pr=th=>{const a=((th-rot)%seg+seg)%seg; const rp=cN/Math.cos(a-Math.PI/N); return rp+(1-rp)*c;};
+      const r=Math.max(0.5,P.t/2);
+      const f=(1-c)*Math.cos(Math.PI/N)+c;       // perpendicular-thickness correction
+      const off=r/Math.max(0.05,f);
+      if(solid || A-off<=0 || B-off<=0){
+        // solid fill (exact convex scan)
+        const outer=polyBounds(N,c,A,B);
+        for(let j=0;j<h;j++){
+          if(outer.lo[j]===null)continue;
+          const iMin=Math.max(0,Math.ceil(outer.lo[j]-0.5)), iMax=Math.min(P.w-1,Math.floor(outer.hi[j]-0.5));
+          if(iMax>=iMin){ rows[j]=[[iMin,iMax]]; count+=iMax-iMin+1; }
+        }
+      } else {
+        // outline: stroke the centerline with a round brush → uniform thickness, clean joins
+        const Ac=A-off, Bc=B-off;
+        const M=clampInt(Math.round(3.2*(P.w+P.h)),256,16000), pts=new Array(M);
+        for(let k=0;k<M;k++){const th=2*Math.PI*k/M, rr=pr(th); pts[k]={x:A+Ac*rr*Math.cos(th), y:B-Bc*rr*Math.sin(th)};}
+        const sr=stampPolyline(pts,r);
+        for(let j=0;j<h;j++){ if(sr[j]){ rows[j]=sr[j]; count+=ivWidth(sr[j]); } }
+      }
+    } else if(P.mode==="arc"){
+      const A=P.w/2,B=P.h/2, start=norm360(P.a0), sweep=arcSweep();
+      for(let j=0;j<h;j++){
+        const r=superRow(j,P.t,2); if(!r)continue;
+        const kept=[];
+        for(const [pa,pb] of ringPieces(r)){
+          let run=null;
+          for(let i=pa;i<=pb;i++){
+            if(inSweep(cellAngle(i,j,A,B),start,sweep)){ if(run===null)run=i; }
+            else if(run!==null){ kept.push([run,i-1]); run=null; }
+          }
+          if(run!==null)kept.push([run,pb]);
+        }
+        if(kept.length){ rows[j]=kept; count+=ivWidth(kept); }
+      }
+    } else { // curve (quadratic Bézier, round brush)
+      const {p0,p1,p2}=P.curve;
+      const steps=Math.max(200,Math.min(40000,Math.ceil((dist(p0,p1)+dist(p1,p2))*2)));
+      const r=Math.max(0.5,P.t/2);
+      const map=new Map();
+      for(let k=0;k<=steps;k++){
+        const t=k/steps, mt=1-t;
+        const sx=mt*mt*p0.x+2*mt*t*p1.x+t*t*p2.x;
+        const sy=mt*mt*p0.y+2*mt*t*p1.y+t*t*p2.y;
+        const j0=Math.max(0,Math.floor(sy-r)), j1=Math.min(h-1,Math.ceil(sy+r));
+        for(let j=j0;j<=j1;j++){
+          const dyc=(j+0.5)-sy, hx2=r*r-dyc*dyc; if(hx2<0)continue;
+          const hx=Math.sqrt(hx2);
+          let a=Math.ceil((sx-hx)-0.5), b=Math.floor((sx+hx)-0.5);
+          a=Math.max(0,a); b=Math.min(P.w-1,b); if(b<a)continue;
+          let arr=map.get(j); if(!arr){arr=[];map.set(j,arr);} arr.push([a,b]);
+        }
+      }
+      for(const [j,arr] of map){
+        arr.sort((u,v)=>u[0]-v[0]);
+        const merged=[]; let ca=arr[0][0],cb=arr[0][1];
+        for(let n=1;n<arr.length;n++){ const [a,b]=arr[n]; if(a<=cb+1){ if(b>cb)cb=b; } else { merged.push([ca,cb]); ca=a;cb=b; } }
+        merged.push([ca,cb]); rows[j]=merged; count+=ivWidth(merged);
+      }
+    }
+    shapeRows=rows; filledCount=count; buildLevels(rows); rebuildColored(); updateStats();
+  }
+
+  // ---------- rendering ----------
+  function draw(){
+    const W=cv.width, H=cv.height, s=view.scale, ox=view.ox, oy=view.oy;
+    ctx.fillStyle="#080a10"; ctx.fillRect(0,0,W,H);
+    drawBackdrop(W,H);
+
+    ctx.strokeStyle="#243352"; ctx.lineWidth=1;
+    ctx.strokeRect(ox+0.5,oy+0.5,P.w*s,P.h*s);
+
+    const jStart=Math.max(0,Math.floor((0-oy)/s));
+    const jEnd  =Math.min(P.h,Math.ceil((H-oy)/s));
+
+    ctx.fillStyle="#4d9bff";
+    const paint=(rowFn,alpha)=>{
+      if(alpha!==undefined)ctx.globalAlpha=alpha;
+      for(let j=jStart;j<jEnd;j++){
+        const iv=rowFn(j); if(!iv)continue;
+        const y=oy+j*s;
+        for(const [a,b] of iv) ctx.fillRect(ox+a*s,y,(b-a+1)*s,s);
+      }
+      if(alpha!==undefined)ctx.globalAlpha=1;
+    };
+    if(morph){
+      const eu=easeIO(Math.min(1,(performance.now()-morph.start)/morph.dur));
+      if(morph.kind==="param"){
+        const pr=lerpParams(morph.pa,morph.pb,eu);
+        paint(j=>paramRow(j,pr));
+      }else if(morph.kind==="sdf"){
+        const w=P.w, a=morph.sdfA, b=morph.sdfB, ie=1-eu;
+        const xS=Math.max(0,Math.floor((0-ox)/s)), xE=Math.min(P.w-1,Math.ceil((W-ox)/s));
+        ctx.globalAlpha=1;
+        for(let j=jStart;j<jEnd;j++){
+          const base=j*w, y=oy+j*s; let rs=-1;
+          for(let i=xS;i<=xE;i++){
+            const inside=(ie*a[base+i]+eu*b[base+i])<=0;
+            if(inside){ if(rs<0)rs=i; }
+            else if(rs>=0){ ctx.fillRect(ox+rs*s,y,(i-rs)*s,s); rs=-1; }
+          }
+          if(rs>=0) ctx.fillRect(ox+rs*s,y,(xE+1-rs)*s,s);
+        }
+      }else if(morph.kind==="wipe"){
+        const c=Math.round(lerp(-1,P.w+1,eu));
+        ctx.globalAlpha=1;
+        for(let j=jStart;j<jEnd;j++){
+          const y=oy+j*s, nw=shapeRows[j], od=morph.rowsA[j];
+          if(nw)for(const [a,b] of nw){const bb=Math.min(b,c-1); if(a<=bb)ctx.fillRect(ox+a*s,y,(bb-a+1)*s,s);}
+          if(od)for(const [a,b] of od){const aa=Math.max(a,c); if(aa<=b)ctx.fillRect(ox+aa*s,y,(b-aa+1)*s,s);}
+        }
+        if(c>=0&&c<=P.w){ ctx.fillStyle="rgba(163,112,255,.85)"; ctx.fillRect(ox+c*s-1,oy,2,P.h*s); ctx.fillStyle="#4d9bff"; }
+      }else{ // dissimilar shapes: keep shared pixels solid, fade only the difference
+        const fillIv=(iv,y)=>{ for(const [a,b] of iv) ctx.fillRect(ox+a*s,y,(b-a+1)*s,s); };
+        for(let j=jStart;j<jEnd;j++){
+          const A=morph.rowsA[j]||[], B=shapeRows[j]||[];
+          if(!A.length && !B.length) continue;
+          const y=oy+j*s;
+          const onlyA=subtract(A,B), onlyB=subtract(B,A), common=subtract(A,onlyA);
+          ctx.globalAlpha=1;      fillIv(common,y);
+          if(eu<1){ ctx.globalAlpha=1-eu; fillIv(onlyA,y); }
+          ctx.globalAlpha=eu;     fillIv(onlyB,y);
+        }
+        ctx.globalAlpha=1;
+      }
+    }else{
+      for(let j=jStart;j<jEnd;j++){
+        const segs=coloredSegs&&coloredSegs[j]; if(!segs)continue;
+        const y=oy+j*s;
+        for(const [a,b,col] of segs){ ctx.fillStyle=col; ctx.fillRect(ox+a*s,y,(b-a+1)*s,s); }
+      }
+    }
+
+    if(P.grid && s>=5){
+      const ga=Math.min(.32,(s-5)/40+.08);
+      ctx.lineWidth=1; ctx.beginPath();
+      const xS=Math.max(0,Math.floor((0-ox)/s)), xE=Math.min(P.w,Math.ceil((W-ox)/s));
+      for(let i=xS;i<=xE;i++){const x=Math.round(ox+i*s)+0.5;ctx.moveTo(x,oy);ctx.lineTo(x,oy+P.h*s);}
+      for(let j=jStart;j<=jEnd;j++){const y=Math.round(oy+j*s)+0.5;ctx.moveTo(ox,y);ctx.lineTo(ox+P.w*s,y);}
+      // pass 1 — light lines, visible on the dark background
+      ctx.strokeStyle="rgba(150,180,235,"+ga+")"; ctx.stroke();
+      // pass 2 — multiply darkens the same lines only where they cross the bright fill
+      ctx.save();
+      ctx.globalCompositeOperation="multiply";
+      ctx.strokeStyle="rgba(86,104,150,.75)";
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if(P.mode==="curve" && !morph) drawHandles(ox,oy,s);
+    if(P.lengths && s>=14 && !morph) drawLengthLabels(ox,oy,s,jStart,jEnd);
+    updateHud();
+  }
+
+  function drawBackdrop(W,H){
+    const step=26*DPR; ctx.fillStyle="#121826";
+    for(let x=(view.ox%step+step)%step;x<W;x+=step)
+      for(let y=(view.oy%step+step)%step;y<H;y+=step) ctx.fillRect(x,y,1,1);
+  }
+
+  function drawHandles(ox,oy,s){
+    const {p0,p1,p2}=P.curve;
+    const S=p=>({x:ox+p.x*s,y:oy+p.y*s});
+    const a=S(p0),b=S(p2),c=S(p1);
+    ctx.save();
+    ctx.setLineDash([5,5]); ctx.strokeStyle="rgba(163,112,255,.6)"; ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(c.x,c.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    ctx.setLineDash([]);
+    // control point (purple, hollow)
+    ctx.beginPath();ctx.arc(c.x,c.y,7,0,7);ctx.fillStyle="#0a0d14";ctx.fill();
+    ctx.lineWidth=2;ctx.strokeStyle="#a370ff";ctx.stroke();
+    // endpoints (blue, filled)
+    for(const [pt,label] of [[a,"A"],[b,"B"]]){
+      ctx.beginPath();ctx.arc(pt.x,pt.y,8,0,7);ctx.fillStyle="#4d9bff";ctx.fill();
+      ctx.lineWidth=2;ctx.strokeStyle="#0a0d14";ctx.stroke();
+    }
+    ctx.fillStyle="#cdd6ea";ctx.font="11px 'IBM Plex Mono',monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText("A",a.x,a.y-15);ctx.fillText("B",b.x,b.y-15);
+    ctx.fillStyle="#a370ff";ctx.fillText("C",c.x,c.y-14);
+    ctx.restore();
+  }
+
+  // ---------- straight-run length labels (block-laying guide) ----------
+  // intervals in A that are NOT covered by B (both sorted, non-overlapping, inclusive)
+  function subtract(A,B){
+    const res=[]; let bi=0;
+    for(const seg of A){
+      let cur=seg[0]; const end0=seg[1];
+      while(cur<=end0){
+        while(bi<B.length && B[bi][1]<cur) bi++;
+        if(bi<B.length && B[bi][0]<=cur){ cur=B[bi][1]+1; }
+        else{
+          let end=end0;
+          if(bi<B.length && B[bi][0]<=end0) end=B[bi][0]-1;
+          res.push([cur,end]); cur=end+1;
+        }
+      }
+    }
+    return res;
+  }
+  // maximal constant-x vertical edge runs (risers) over an expanded visible band
+  function verticalRisers(jSv,jEv){
+    const vh=Math.max(4,jEv-jSv);
+    const eJ0=Math.max(0,jSv-vh), eJ1=Math.min(P.h,jEv+vh);
+    const out=[], openL=new Map(), openR=new Map();
+    const close=(x,sj,ej)=>{
+      if((sj===eJ0&&eJ0>0)||(ej===eJ1-1&&eJ1<P.h))return; // run leaves band → too long for view
+      out.push({x,j0:sj,j1:ej});
+    };
+    for(let j=eJ0;j<eJ1;j++){
+      const iv=shapeRows[j], Ls=new Set(), Rs=new Set();
+      if(iv)for(const [a,b] of iv){Ls.add(a);Rs.add(b);}
+      for(const [x,sj] of [...openL]) if(!Ls.has(x)){close(x,sj,j-1);openL.delete(x);}
+      for(const [x,sj] of [...openR]) if(!Rs.has(x)){close(x,sj,j-1);openR.delete(x);}
+      for(const x of Ls) if(!openL.has(x))openL.set(x,j);
+      for(const x of Rs) if(!openR.has(x))openR.set(x,j);
+    }
+    for(const [x,sj] of openL) close(x,sj,eJ1-1);
+    for(const [x,sj] of openR) close(x,sj,eJ1-1);
+    return out;
+  }
+  function drawLengthLabels(ox,oy,s,jSv,jEv){
+    const fontPx=Math.max(9,Math.min(Math.floor(s*0.7),24));
+    ctx.font=`600 ${fontPx}px 'IBM Plex Mono',monospace`;
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.lineWidth=Math.max(2.5,fontPx*0.3);ctx.lineJoin="round";
+    const W=cv.width,H=cv.height;
+    const num=(cx,cy,n)=>{
+      if(cx<-20||cx>W+20||cy<-20||cy>H+20)return;
+      const t=""+n;
+      ctx.strokeStyle="rgba(8,10,16,.92)";ctx.strokeText(t,cx,cy);
+      ctx.fillStyle="#c9a3ff";ctx.fillText(t,cx,cy);
+    };
+    // vertical risers → label height
+    const seen=new Set();
+    for(const r of verticalRisers(jSv,jEv)){
+      const len=r.j1-r.j0+1;
+      if(len<2 || len*s<fontPx*1.05)continue;
+      const k=r.x+"|"+r.j0+"|"+r.j1; if(seen.has(k))continue; seen.add(k);
+      num(ox+(r.x+0.5)*s, oy+((r.j0+r.j1+1)/2)*s, len);
+    }
+    // horizontal treads → label width
+    const j0=Math.max(0,jSv-1), j1=Math.min(P.h-1,jEv), tseen=new Set();
+    for(let j=j0;j<=j1;j++){
+      const cur=shapeRows[j]; if(!cur)continue;
+      const up=(j>0?shapeRows[j-1]:null)||[];
+      const dn=(j<P.h-1?shapeRows[j+1]:null)||[];
+      const treads=subtract(cur,up).concat(subtract(cur,dn));
+      for(const [a,b] of treads){
+        const len=b-a+1;
+        if(len<2 || len*s<fontPx*1.6)continue;
+        const k=j+"|"+a+"|"+b; if(tseen.has(k))continue; tseen.add(k);
+        num(ox+((a+b+1)/2)*s, oy+(j+0.5)*s, len);
+      }
+    }
+  }
+
+  // ---------- stats / hud ----------
+  const fmt=n=>n.toLocaleString("en-US");
+  function updateStats(){
+    let shape,mode,mc="v";
+    if(P.mode==="ellipse"){
+      shape=(P.w===P.h?"Circle":"Ellipse")+(isSolidDisk()?" · disk":"");
+      if(isSolidDisk()){mode="solid disk";mc="v warn";} else mode=`outline (${P.t}px)`;
+    } else if(P.mode==="arc"){
+      shape="Arc"; mode=`arc · ${Math.round(arcSweep())}° · ${P.t}px`;
+    } else if(P.mode==="polygon"){
+      const names={3:"Triangle",4:"Square",5:"Pentagon",6:"Hexagon",7:"Heptagon",8:"Octagon",9:"Nonagon",10:"Decagon"};
+      shape=(names[P.sides]||P.sides+"-gon")+(isSolidDisk()?" · solid":"");
+      mode=`${P.sides} sides · ${P.curv>0?Math.round(P.curv*100)+"% round":"sharp"} · ${isSolidDisk()?"solid":P.t+"px"}`;
+      if(isSolidDisk())mc="v warn";
+    } else { shape="Curve"; mode=`stroke (${P.t}px)`; }
+    $("sShape").textContent=shape;
+    $("sBounds").textContent=`${fmt(P.w)} × ${fmt(P.h)}`;
+    const tot=P.w*P.h;
+    $("sTotal").textContent=fmt(tot);
+    $("sFilled").textContent=fmt(filledCount);
+    $("sCover").textContent=(100*filledCount/tot).toFixed(2)+"%";
+    const m=$("sMode");m.textContent=mode;m.className=mc;
+  }
+  function updateHud(){ $("hZoom").textContent=view.scale>=1?view.scale.toFixed(1)+"×":view.scale.toFixed(2)+"×"; }
+
+  // ---------- view ----------
+  function resize(){
+    DPR=Math.max(1,window.devicePixelRatio||1);
+    const r=cv.getBoundingClientRect();
+    cv.width=Math.max(1,Math.floor(r.width*DPR));
+    cv.height=Math.max(1,Math.floor(r.height*DPR));
+    draw();
+  }
+  function fitView(){
+    cancelZoom();
+    const pad=40*DPR;
+    view.scale=Math.max(0.02,Math.min((cv.width-pad*2)/P.w,(cv.height-pad*2)/P.h));
+    view.ox=(cv.width-P.w*view.scale)/2;
+    view.oy=(cv.height-P.h*view.scale)/2;
+    draw();
+  }
+  function zoomAt(cx,cy,f){
+    const ns=Math.max(0.02,Math.min(400,view.scale*f)), k=ns/view.scale;
+    view.ox=cx-(cx-view.ox)*k; view.oy=cy-(cy-view.oy)*k; view.scale=ns; draw();
+  }
+  // smooth, cursor-anchored zoom
+  function smoothZoom(cx,cy,factor){
+    const base=zAnim?zAnim.target:view.scale;
+    const target=Math.max(0.02,Math.min(400,base*factor));
+    const wx=(cx-view.ox)/view.scale, wy=(cy-view.oy)/view.scale;
+    const running=!!zAnim;
+    zAnim={cx,cy,wx,wy,target};
+    if(!running)requestAnimationFrame(zStep);
+  }
+  function zStep(){
+    if(!zAnim)return;
+    const ns=view.scale+(zAnim.target-view.scale)*0.2;
+    const done=Math.abs(zAnim.target-ns)<=zAnim.target*0.0015;
+    view.scale=done?zAnim.target:ns;
+    view.ox=zAnim.cx-zAnim.wx*view.scale;
+    view.oy=zAnim.cy-zAnim.wy*view.scale;
+    draw();
+    if(done)zAnim=null; else requestAnimationFrame(zStep);
+  }
+  function cancelZoom(){ zAnim=null; }
+
+  // ---------- scheduled rebuild ----------
+  let pending=false;
+  function scheduleBuild(){ morph=null; if(pending)return; pending=true; requestAnimationFrame(()=>{pending=false;buildShape();draw();}); }
+
+  // ---------- inputs ----------
+  const clampInt=(v,lo,hi)=>{v=Math.round(+v||0);return Math.max(lo,Math.min(hi,v));};
+  function clampHandles(){
+    for(const k of ["p0","p1","p2"]){
+      P.curve[k].x=Math.max(0,Math.min(P.w,P.curve[k].x));
+      P.curve[k].y=Math.max(0,Math.min(P.h,P.curve[k].y));
+    }
+  }
+  function defaultHandles(){
+    P.curve.p0={x:P.w*0.12,y:P.h*0.78};
+    P.curve.p1={x:P.w*0.50,y:P.h*0.08};
+    P.curve.p2={x:P.w*0.88,y:P.h*0.78};
+  }
+  function syncControls(){
+    $("wNum").value=P.w;$("hNum").value=P.h;$("tNum").value=P.t;
+    $("wRange").value=Math.min(2000,P.w);$("hRange").value=Math.min(2000,P.h);$("tRange").value=Math.min(500,P.t);
+    $("a0Num").value=P.a0;$("a1Num").value=P.a1;$("a0Range").value=P.a0;$("a1Range").value=P.a1;
+    $("sidesNum").value=P.sides;$("sidesRange").value=P.sides;
+    $("curvNum").value=Math.round(P.curv*100);$("curvRange").value=Math.round(P.curv*100);
+  }
+  function setW(v,fit){P.w=clampInt(v,1,100000);if(P.lock)P.h=P.w;clampHandles();syncControls();scheduleBuild();if(fit)fitView();}
+  function setH(v,fit){P.h=clampInt(v,1,100000);if(P.lock)P.w=P.h;clampHandles();syncControls();scheduleBuild();if(fit)fitView();}
+  function setT(v){P.t=clampInt(v,1,50000);syncControls();scheduleBuild();}
+  function setA0(v){P.a0=clampInt(v,0,360);syncControls();scheduleBuild();}
+  function setA1(v){P.a1=clampInt(v,0,360);syncControls();scheduleBuild();}
+  function setSides(v){P.sides=clampInt(v,3,12);syncControls();scheduleBuild();}
+  function setCurv(v){P.curv=Math.max(0,Math.min(1,(+v||0)/100));syncControls();scheduleBuild();}
+
+  $("wRange").oninput=e=>setW(e.target.value);
+  $("hRange").oninput=e=>setH(e.target.value);
+  $("tRange").oninput=e=>setT(e.target.value);
+  $("wNum").onchange=e=>setW(e.target.value,true);
+  $("hNum").onchange=e=>setH(e.target.value,true);
+  $("tNum").onchange=e=>setT(e.target.value);
+  $("a0Range").oninput=e=>setA0(e.target.value);
+  $("a1Range").oninput=e=>setA1(e.target.value);
+  $("a0Num").onchange=e=>setA0(e.target.value);
+  $("a1Num").onchange=e=>setA1(e.target.value);
+  $("sidesRange").oninput=e=>setSides(e.target.value);
+  $("sidesNum").onchange=e=>setSides(e.target.value);
+  $("curvRange").oninput=e=>setCurv(e.target.value);
+  $("curvNum").onchange=e=>setCurv(e.target.value);
+
+  // lane paint palette
+  function renderSwatches(){
+    const wrap=$("swatches"); wrap.innerHTML="";
+    LANE_COLORS.forEach(col=>{
+      const d=document.createElement("div");
+      d.className="sw"+(col.toLowerCase()===paintColor.toLowerCase()?" on":"");
+      d.style.background=col;
+      d.onclick=()=>{paintColor=col;$("customColor").value=col;renderSwatches();};
+      wrap.appendChild(d);
+    });
+  }
+  renderSwatches();
+  $("customColor").oninput=e=>{paintColor=e.target.value;renderSwatches();};
+  $("clearLanes").onclick=()=>{laneColors={};rebuildColored();draw();};
+  function tryPaint(e){
+    if(!levelGrid)return;
+    const {px,py}=evPos(e), s=view.scale;
+    const gx=Math.floor((px-view.ox)/s), gy=Math.floor((py-view.oy)/s);
+    if(gx<0||gy<0||gx>=P.w||gy>=P.h)return;
+    const lv=levelGrid[gy*P.w+gx]; if(lv<0)return;
+    laneColors[lv]=paintColor; rebuildColored(); draw();
+  }
+
+  function applyModeUI(){
+    $("arcCtrls").classList.toggle("hidden",P.mode!=="arc");
+    $("polyCtrls").classList.toggle("hidden",P.mode!=="polygon");
+    $("curveCtrls").classList.toggle("hidden",P.mode!=="curve");
+    $("laneCtrls").classList.toggle("hidden",!(P.mode==="ellipse"||P.mode==="arc"||P.mode==="polygon"));
+    $("solidTog").classList.toggle("hide",!(P.mode==="ellipse"||P.mode==="polygon"));
+    $("lockTog").classList.toggle("hide",P.mode==="curve");
+    $("tLab").textContent=P.mode==="curve"?"Stroke width":"Thickness";
+    $("hint").textContent=P.mode==="curve"
+      ? "drag A · B · C handles · scroll = zoom · pan = empty space"
+      : "scroll = zoom · drag = pan";
+  }
+  $("seg").querySelectorAll("button").forEach(btn=>{
+    btn.onclick=()=>{
+      const nm=btn.dataset.mode; if(nm===P.mode)return;
+      const om=P.mode;
+      const fam=m=>m==="ellipse"||m==="arc";
+      let kind;
+      if(fam(om)&&fam(nm)) kind="param";
+      else kind=(P.w*P.h<=SDF_CAP)?"sdf":"wipe";
+      let srcParams,srcRows;
+      if(kind==="param") srcParams=curParams()||paramsFor(om);
+      else srcRows=currentDisplayedRows();
+      P.mode=nm;
+      $("seg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b===btn));
+      if(nm==="curve" && !P.curveInit){defaultHandles();P.curveInit=true;}
+      applyModeUI(); buildShape();
+      if(kind==="param") startMorphParam(srcParams,paramsFor(nm));
+      else if(kind==="sdf") startMorphSdf(srcRows);
+      else startMorph(srcRows,"wipe");
+    };
+  });
+
+  function toggle(id,key,after){
+    $(id).onclick=()=>{P[key]=!P[key];$(id).classList.toggle("on",P[key]);if(after)after();scheduleBuild();};
+  }
+  toggle("lockTog","lock",()=>{if(P.lock){P.h=P.w;syncControls();}});
+  toggle("gridTog","grid");
+  toggle("solidTog","solid");
+  toggle("lenTog","lengths");
+
+  $("fitBtn").onclick=fitView;
+  $("resetBtn").onclick=()=>{
+    Object.assign(P,{mode:"ellipse",w:64,h:64,t:2,lock:false,grid:true,solid:false,lengths:true,sides:6,curv:0,a0:0,a1:180,curveInit:false});
+    laneColors={}; defaultHandles();
+    $("seg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.mode==="ellipse"));
+    $("lockTog").classList.remove("on");$("solidTog").classList.remove("on");$("gridTog").classList.add("on");$("lenTog").classList.add("on");
+    applyModeUI();syncControls();scheduleBuild();fitView();
+  };
+  $("pngBtn").onclick=exportPNG;
+  // ↓↓↓ REPLACE with your real PayPal link (e.g. https://paypal.me/yourhandle) ↓↓↓
+  const KOFI_URL="https://ko-fi.com/nmh360";   // <-- your Ko-fi page
+  $("supportBtn").onclick=()=>window.open(KOFI_URL,"_blank","noopener,noreferrer");
+  $("zin").onclick=()=>smoothZoom(cv.width/2,cv.height/2,1.4);
+  $("zout").onclick=()=>smoothZoom(cv.width/2,cv.height/2,1/1.4);
+
+  // ---------- pointer ----------
+  let dragging=false,lx=0,ly=0,downX=0,downY=0,moved=false;
+  const evPos=e=>{const r=cv.getBoundingClientRect();return{px:(e.clientX-r.left)*DPR,py:(e.clientY-r.top)*DPR};};
+  function hitHandle(px,py){
+    const s=view.scale,th=14*DPR;
+    const order=[["p0",P.curve.p0],["p2",P.curve.p2],["p1",P.curve.p1]];
+    for(const [k,p] of order){
+      const hx=view.ox+p.x*s, hy=view.oy+p.y*s;
+      if(Math.hypot(px-hx,py-hy)<=th)return k;
+    }
+    return null;
+  }
+  cv.addEventListener("pointerdown",e=>{
+    cancelZoom();
+    const {px,py}=evPos(e);
+    if(P.mode==="curve"){const k=hitHandle(px,py);if(k){activeHandle=k;cv.classList.add("handle");cv.setPointerCapture(e.pointerId);return;}}
+    dragging=true;lx=e.clientX;ly=e.clientY;downX=e.clientX;downY=e.clientY;moved=false;cv.classList.add("drag");cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove",e=>{
+    const {px,py}=evPos(e), s=view.scale;
+    const gx=Math.floor((px-view.ox)/s), gy=Math.floor((py-view.oy)/s);
+    $("hCur").textContent=(gx>=0&&gy>=0&&gx<P.w&&gy<P.h)?`${gx}, ${gy}`:"—";
+    if(activeHandle){
+      P.curve[activeHandle].x=Math.max(0,Math.min(P.w,(px-view.ox)/s));
+      P.curve[activeHandle].y=Math.max(0,Math.min(P.h,(py-view.oy)/s));
+      scheduleBuild();return;
+    }
+    if(dragging){if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>4)moved=true;view.ox+=(e.clientX-lx)*DPR;view.oy+=(e.clientY-ly)*DPR;lx=e.clientX;ly=e.clientY;draw();}
+  });
+  const endDrag=()=>{dragging=false;activeHandle=null;cv.classList.remove("drag","handle");};
+  cv.addEventListener("pointerup",e=>{ if(dragging&&!moved&&!activeHandle)tryPaint(e); endDrag(); });
+  cv.addEventListener("pointercancel",endDrag);
+  cv.addEventListener("pointerleave",()=>{$("hCur").textContent="—";});
+  cv.addEventListener("wheel",e=>{e.preventDefault();const {px,py}=evPos(e);smoothZoom(px,py,e.deltaY<0?1.2:1/1.2);},{passive:false});
+
+  // ---------- export ----------
+  function exportPNG(){
+    const off=document.createElement("canvas");off.width=P.w;off.height=P.h;
+    const o=off.getContext("2d");o.fillStyle="#000";o.fillRect(0,0,P.w,P.h);
+    for(let j=0;j<P.h;j++){const segs=coloredSegs&&coloredSegs[j];if(!segs)continue;for(const [a,b,col] of segs){o.fillStyle=col;o.fillRect(a,j,b-a+1,1);}}
+    const a=document.createElement("a");
+    a.download=`pixelforge_${P.mode}_${P.w}x${P.h}_t${P.t}.png`;
+    a.href=off.toDataURL("image/png");a.click();
+  }
+
+  window.addEventListener("resize",resize);
+  defaultHandles(); applyModeUI(); resize(); buildShape(); fitView();
+})();
+</script>
+</body>
+</html>
