@@ -139,6 +139,9 @@
   .support{width:100%;background:linear-gradient(180deg,rgba(163,112,255,.22),rgba(163,112,255,.10));border:1px solid var(--pur-dim);color:#c9a3ff;font-family:inherit;font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:10px 6px;border-radius:6px;cursor:pointer;transition:.15s}
   .support:hover{border-color:var(--pur);box-shadow:0 0 14px rgba(163,112,255,.28);color:#fff}
   .support .hrt{color:#ff6b9d;margin-right:6px}
+  .suggest{width:100%;margin-top:6px;background:transparent;border:1px solid var(--line);color:var(--ink-dim);font-family:inherit;font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:9px 6px;border-radius:6px;cursor:pointer;transition:.15s}
+  .suggest:hover{border-color:#5865F2;color:#fff;box-shadow:0 0 14px rgba(88,101,242,.28)}
+  .suggest .ds{margin-right:6px}
   .btn{
     flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);font-family:inherit;
     font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:9px 6px;border-radius:6px;cursor:pointer;transition:.15s;
@@ -271,6 +274,7 @@
         <button class="btn pur" id="pngBtn">Save PNG</button>
       </div>
       <button class="support" id="supportBtn"><span class="hrt">&#9749;</span>Support on Ko-fi</button>
+      <button class="suggest" id="suggestBtn"><span class="ds">&#128172;</span>Suggestions?</button>
     </div>
   </aside>
 
@@ -1095,6 +1099,8 @@
   // ↓↓↓ REPLACE with your real PayPal link (e.g. https://paypal.me/yourhandle) ↓↓↓
   const KOFI_URL="https://ko-fi.com/nmh360";   // <-- your Ko-fi page
   $("supportBtn").onclick=()=>window.open(KOFI_URL,"_blank","noopener,noreferrer");
+  const DISCORD_URL="https://discord.gg/hURCQ4vFXW";
+  $("suggestBtn").onclick=()=>window.open(DISCORD_URL,"_blank","noopener,noreferrer");
   $("zin").onclick=()=>smoothZoom(cv.width/2,cv.height/2,1.4);
   $("zout").onclick=()=>smoothZoom(cv.width/2,cv.height/2,1/1.4);
 
